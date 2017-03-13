@@ -21,9 +21,14 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 RECORD_SECONDS = 40
+#opus data rate 25 millisecond packets
+# 10 - 60 ms typical voip
+#WebRTC rather than peer2peer
+#poster for modern marvel, oral report 15 min, documentation, test report
+#last class ethics excercise
 
 HOST = 'localhost'#'192.168.1.19'    # The remote host
-PORT = 50007              # The same port as used by the server
+PORT = 23555#50007              # The same port as used by the server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
@@ -46,7 +51,7 @@ for i in range(0, int(RATE/CHUNK*RECORD_SECONDS)):
  #print(str(data))
  #strData = str(data)
  encrypted = box.encrypt(data,nonce)#was data,nonce ##added for encrypt boiii
- print(len(encrypted))
+ #print(encrypted)
  s.sendall(encrypted)#was data
  
 

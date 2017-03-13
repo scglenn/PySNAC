@@ -40,7 +40,7 @@ stream = p.open(format=p.get_format_from_width(WIDTH),
 
 
 HOST = ''                 # Symbolic name meaning all available interfaces
-PORT = 50007              # Arbitrary non-privileged port
+PORT = 23555#50007              # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(1)
@@ -50,17 +50,17 @@ data = conn.recv(2088) #1024
 nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
 i=1
 while data != '':
-    print(len(data))
+    #print(len(data))
     try:   
         data = box2.decrypt(data)
         stream.write(data)
         data = conn.recv(2088) #1024
         i=i+1
-        print(i)
+        #print(i)
         frames.append(data)
     
     except Exception:
-        print("fuck")
+        print("no connection")
 
 wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
 wf.setnchannels(CHANNELS)
