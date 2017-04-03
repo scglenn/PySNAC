@@ -60,6 +60,7 @@ try:
      #strData = str(data)
      #def encode(encoder, pcm, frame_size, max_data_bytes):
      #print(type(data))
+
      data = opuslib.api.encoder.encode(encoder, data, CHUNK, 2*CHUNK)
      #data = dataString.encode('utf-8')
      #print(type(data))
