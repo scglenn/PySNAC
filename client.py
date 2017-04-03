@@ -20,7 +20,7 @@ print(nonce)
 CHUNK = 1024 #was 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE =28000
+RATE =48000
 RECORD_SECONDS = 80
 #opus data rate 25 millisecond packets
 # 10 - 60 ms typical voip
@@ -47,16 +47,22 @@ print("*recording")
 frames = []
 # print(ctypes.c_int())
 # create encoder
-encoder = opuslib.api.encoder.create(RATE, CHANNELS, opuslib.api.constants.APPLICATION_AUDIO)
+encoder = opuslib.api.encoder.create(RATE, CHANNELS, opuslib.api.constants.APPLICATION_RESTRICTED_LOWDELAY)
 try:
     for i in range(0, int(RATE/CHUNK*RECORD_SECONDS)):
-     data  = stream.read(CHUNK)
+     data = stream.read(CHUNK)
+     #print(type(data))
+     #dataString = data.decode('utf-8')
+     #print(type(dataString))
      #frames.append(data)
      # compress here
      #print(str(data))
      #strData = str(data)
      #def encode(encoder, pcm, frame_size, max_data_bytes):
-     data = opuslib.api.encoder.encode(encoder, data, CHUNK, RATE*CHUNK)
+     #print(type(data))
+     data = opuslib.api.encoder.encode(encoder, data, CHUNK, 2*CHUNK)
+     #data = dataString.encode('utf-8')
+     #print(type(data))
      encrypted = box.encrypt(data,nonce)#was data,nonce ##added for encrypt boiii
      #print(len(encrypted))
      #print(encrypted)

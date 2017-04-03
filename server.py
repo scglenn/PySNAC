@@ -26,10 +26,11 @@ import opuslib.api.decoder
 CHUNK = 2088
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 28000#44100
+RATE = 48000#44100
 RECORD_SECONDS = 80#5
 WAVE_OUTPUT_FILENAME = "server_output.wav"
 WIDTH = 2
+DECODE_FEC = 1
 frames = []
 
 p = pyaudio.PyAudio()
@@ -62,8 +63,9 @@ while data != '':
         try:
             if(len(data) ==2088):
                 data = box2.decrypt(data)
+                # print(type(data))
                 #def decode(decoder, data, length, frame_size, decode_fec, channels=2):
-                data = opuslib.api.decoder.decode(decoder, data, ??, CHUNK, ??, CHANNELS)
+                # data = opuslib.api.decoder.decode(decoder, data, CHUNK, RATE, DECODE_FEC, CHANNELS)
                 stream.write(data)
                 data = conn.recv(CHUNK) #1024
                 i=i+1
