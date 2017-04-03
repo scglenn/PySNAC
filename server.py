@@ -8,6 +8,7 @@ import sys
 import nacl.secret
 import nacl.utils
 #from hashlib import blake2b
+import opuslib
 
 key = (12345).to_bytes(32,byteorder='big')
 box2 = nacl.secret.SecretBox(key)
@@ -54,12 +55,15 @@ i=1
 print("first data received")
 print(len(data))
 #time.sleep(1)
+decoder = opuslib.api.decoder.create(RATE, CHANNELS)
 while data != '':
     #print(len(data))
     if True:
         try:
             if(len(data) ==2088):
                 data = box2.decrypt(data)
+                #def decode(decoder, data, length, frame_size, decode_fec, channels=2):
+                data = opuslib.api.decoder.decode(decoder, data, ??, CHUNK, ??, CHANNELS)
                 stream.write(data)
                 data = conn.recv(CHUNK) #1024
                 i=i+1
