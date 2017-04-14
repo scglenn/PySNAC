@@ -5,11 +5,14 @@ import wave
 import sys
 import time
 
+import Adafruit_CharLCD as LCD #LCD library
+from LCD_Control import LCD_Control #LCD library
+
 import nacl.secret
 import nacl.utils
 
 import subprocess
-
+from queue import *
 #from requests import get
 
 #import urllib
@@ -46,6 +49,23 @@ WIDTH = 2
 #network
 Listener_HOST = littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
 Listener_PORT = 50007#23555#50007              # The same port as used by the server
+#global variable to see whether call was made or received
+waitingForCall = True
+
+#Initializing LCD control
+control = LCD_Control(LCD)
+
+listener_stream = 0
+jitter_buf = Queue()
+
+def write_to_stream():
+    global listener_stream
+    while(True):
+        item = jitter_buf.get()
+        if not item is None:
+            listener_stream.write(item)
+
+writer = threading.Thread(target=write_to_stream)
 
 # client thread
 def talk():
@@ -81,18 +101,22 @@ def talk():
     s.close()
 
     print("*closed")
+    
 
+   
 # server thread   
 def listen():
+    global listener_stream
+
     p = pyaudio.PyAudio()
-    stream = p.open(format=p.get_format_from_width(WIDTH),
+    listener_stream = p.open(format=p.get_format_from_width(WIDTH),
                     channels=CHANNELS,
                     rate=RATE,
                     output=True,
                     frames_per_buffer=Listen_CHUNK)
 
 
-    PORT = 50008#23555#50007              # Arbitrary non-privileged port
+    PORT = 50008#23555#50007 changed to 50007 from 50008             # Arbitrary non-privileged port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -100,11 +124,19 @@ def listen():
 
     s.bind(('', PORT))
     s.listen(1)
-    conn, addr = s.accept()#here the thread waits for a connection 
-    if(conn):
-        talker = threading.Thread(target=talk)
-        talker.start()
-        
+
+
+    caller = threading.Thread(target=call)
+    caller.start()
+    
+    conn, addr = s.accept()#here the thread waits for a connection
+    global waitingForCall
+    if waitingForCall :
+        if(conn):
+            waitingForCall = False
+            talker = threading.Thread(target=talk)
+            talker.start()
+
     print ('Connected by', addr)
     time.sleep(2)
     data = conn.recv(Listen_CHUNK, socket.MSG_WAITALL) #1024
@@ -113,10 +145,14 @@ def listen():
     print("first data received")
     print(len(data))
 
+    writer.start()
+
     while data != '':
         try:
             data = talk_secret_box.decrypt(data)
-            stream.write(data)
+            jitter_buf.put(data)
+            print(jitter_buf.qsize())
+            #stream.write(data)
             data = conn.recv(Listen_CHUNK, socket.MSG_WAITALL) #1024
             i=i+1
             #print(i)
@@ -129,7 +165,15 @@ def listen():
     stream.close()
     p.terminate()
     conn.close()
+    
+def call():
+    myInput = control.getUserInput()
+    global waitingForCall
+    if waitingForCall:
+        waitingForCall  = False
+        talk()
 
+    
 listener =threading.Thread(target=listen)
 listener.start()
 
