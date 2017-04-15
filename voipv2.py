@@ -4,6 +4,7 @@ import pyaudio
 import wave
 import sys
 import time
+import lz4 # compression library
 
 import Adafruit_CharLCD as LCD #LCD library
 from LCD_Control import LCD_Control #LCD library
@@ -61,8 +62,9 @@ jitter_buf = Queue()
 def write_to_stream():
     global listener_stream
     while(True):
+        
         item = jitter_buf.get()
-        if not item is None:
+        if( (not item is None) and (jitter_buf.qsize()<=5)):
             listener_stream.write(item)
 
 writer = threading.Thread(target=write_to_stream)
@@ -85,7 +87,10 @@ def talk():
     try:
         for i in range(0, int(RATE/Talk_CHUNK*RECORD_SECONDS)):
          data  = stream.read(Talk_CHUNK)
-         encrypted = listen_secret_box.encrypt(data,nonce)#was data,nonce ##added for encrypt boiii
+         compressed_data = lz4.dumps(data)#compressed
+         
+         encrypted = listen_secret_box.encrypt(compressed_data,nonce)#was data,nonce ##added for encrypt boiii
+         print(len(encrypted))
          if len(encrypted)!=1448:
              s.sendall(encrypted)#was data
     except Exception:
@@ -150,6 +155,7 @@ def listen():
     while data != '':
         try:
             data = talk_secret_box.decrypt(data)
+            data = lz4.loads(data)#decompress
             jitter_buf.put(data)
             print(jitter_buf.qsize())
             #stream.write(data)
