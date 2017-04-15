@@ -1,7 +1,7 @@
 # Echo server program
 import socket
 import pyaudio
-import wave
+#import wave
 import time
 import sys
 # 4 25
@@ -56,7 +56,7 @@ i=1
 print("first data received")
 print(len(data))
 #time.sleep(1)
-decoder = opuslib.api.decoder.create(RATE, CHANNELS)
+#decoder = opuslib.api.decoder.create(RATE, CHANNELS)
 while data != '':
     #print(len(data))
     if True:
