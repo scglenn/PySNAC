@@ -21,12 +21,16 @@ with wave.open(sys.argv[1], 'r') as fileIn:
     frames = fileIn.readframes(params[3])
     #encode
     print("encoding data...")
+    start = time.time()
     enData = zlib.compress(frames)
     #decode
-    print("encoding done")
+    print("encoding done, took " + str(time.time() - start) + " seconds")
     print("decoding data...")
+    start = time.time()
     decData = zlib.decompress(enData)
-    print("decoding done")
+    print("decoding done, took " + str(time.time() - start) + " seconds")
+    print("metrics:\n\tcompression ratio: " + str(len(enData)/len(frames)) + "\n\toverall reduction: " + str(len(decData)/len(frames)))
+    print("writing to file...")
     with wave.open(sys.argv[2], 'w') as fileOut:
         fileOut.setparams(params)
         #fileOut.writeframes(enData)

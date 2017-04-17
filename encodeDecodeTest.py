@@ -2,7 +2,7 @@ import pyaudio
 import wave
 import time
 import sys
-import opuslib
+from opus import OpusCodec
 
 def printParams(params):
     print("channels: " + str(params[0]) + ", type: " + str(type(params[0])))
@@ -21,41 +21,35 @@ with wave.open(sys.argv[1], 'r') as fileIn:
     print("getting params...")
     printParams(params)
     frames = fileIn.readframes(params[3])
-    print("length of frames: " + str(len(frames)))
-    print("total size of frames: " + str(sys.getsizeof(frames)))
-    CHANNELS = params[0]
-    #FRAME_SIZE = params[1]
-    FRAME_SIZE = 960         #<- from .c example
-    MAX_FRAME_SIZE = 6*960     #<- from .c example
-    MAX_PACKET_SIZE = (3*1276) #<- from .c example
-    FRAME_RATE = params[2]
-    BIT_RATE = 16000
+    origFrameSize = len(frames)
     #encode
-    print("creating encoder...")
-    encoder = opuslib.api.encoder.create(FRAME_RATE, CHANNELS, opuslib.api.constants.APPLICATION_AUDIO)
-    opuslib.api.encoder.ctl(encoder, opuslib.api.ctl.set_bitrate, BIT_RATE)
-    print("encoding data...")
-    #encode(encoder, pcm, frame_size, max_data_bytes):
-    enData = opuslib.api.encoder.encode(encoder, frames, FRAME_SIZE, len(frames))
-    #decode
-    print("encoding done\ncreating decoder...")
-    decoder = opuslib.api.decoder.create(FRAME_RATE, CHANNELS)
-    opuslib.api.encoder.ctl(decoder, opuslib.api.ctl.set_bitrate, BIT_RATE)
-    #decode(decoder, data, length, frame_size, decode_fec, channels=2):
-    print("decoding data...")
-    #check line 992 in opus decoder.c
-    decData = opuslib.api.decoder.decode(decoder, enData, 1000, MAX_FRAME_SIZE, 0, CHANNELS)
-    # for q in range(1000000):
-    #     try:
-    #         decData = opuslib.api.decoder.decode(decoder, enData, q, MAX_FRAME_SIZE, 0, CHANNELS)
-    #         print(str(q))
-    #     except:
-    #         a = "fuck you"
-    print("decoding done\nwriting to file...")
-    decData = decData
+    print("creating OpusCodec...")
+    oc = OpusCodec()
+    print("starting encoding, decoding, and writing...")
+    enTime = 0
+    decTime = 0
+    enSize = 0
+    decSize = 0
+    chunkSize = 2*960
     with wave.open(sys.argv[2], 'w') as fileOut:
         fileOut.setparams(params)
-        fileOut.writeframes(decData)
+        for i in range(int(len(frames)/chunkSize)):
+            # encoding + metrics
+            enStart = time.time()
+            enData = oc.encode(frames)
+            enTime += time.time()-enStart
+            enSize += len(enData)
+            # decoding + metrics
+            decStart = time.time()
+            decData = oc.decode(enData)
+            decTime = time.time()-decStart
+            decSize += len(decData)
+            # writing and resizing of frames
+            fileOut.writeframes(decData)
+            frames = frames[chunkSize:]
+        print("finished encoding, decoding, and writing")
         fileOut.close()
+    print("\ttotal encoding time: " + str(enTime) + " seconds\n\ttotal decoding time: " + str(decTime) + " seconds")
+    print("metrics:\n\tcompressed file size vs. original: " + str(enSize/origFrameSize*100) + "%\n\toverall reduction: " + str(100 - (decSize/origFrameSize*100)) + "%")
     fileIn.close()
     print("test complete")

@@ -3,7 +3,7 @@ opuslib from:
 https://github.com/OnBeep/opuslib
 OpusCodec class modified from:
 https://stackoverflow.com/questions/17728706/python-portaudio-opus-encoding-decoding
-class provided from David Anderson:
+class provided from David Andersen:
 k0rx@uiowa.edu
 """
 
