@@ -6,7 +6,8 @@ import time
 import nacl.secret
 import nacl.utils
 #from hashlib import blake2b
-
+import opuslib
+# import ctypes
 
 key = (12345).to_bytes(32,byteorder='big')
 box = nacl.secret.SecretBox(key)
@@ -19,7 +20,7 @@ print(nonce)
 CHUNK = 1024 #was 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE =28000
+RATE =48000
 RECORD_SECONDS = 80
 #opus data rate 25 millisecond packets
 # 10 - 60 ms typical voip
@@ -27,8 +28,8 @@ RECORD_SECONDS = 80
 #poster for modern marvel, oral report 15 min, documentation, test report
 #last class ethics excercise
 
-HOST = '172.23.9.200'#'172.23.48.9'#'172.23.9.200'#'192.168.1.9'#'192.168.1.9'#'192.168.1.19'    # The remote host
-PORT = 50008#23555#50007              # The same port as used by the server
+HOST = '172.17.42.158'#para Richard
+PORT = 50007#23555#50007              # The same port as used by the server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
@@ -44,21 +45,33 @@ stream = p.open(format=FORMAT,
 print("*recording")
 
 frames = []
+# print(ctypes.c_int())
+# create encoder
+#encoder = opuslib.api.encoder.create(RATE, CHANNELS, opuslib.api.constants.APPLICATION_RESTRICTED_LOWDELAY)
 try:
     for i in range(0, int(RATE/CHUNK*RECORD_SECONDS)):
-     data  = stream.read(CHUNK)
-     frames.append(data)
+     data = stream.read(CHUNK)
+     #print(type(data))
+     #dataString = data.decode('utf-8')
+     #print(type(dataString))
+     #frames.append(data)
+     # compress here
      #print(str(data))
      #strData = str(data)
+     #def encode(encoder, pcm, frame_size, max_data_bytes):
+     #print(type(data))
+     #data = opuslib.api.encoder.encode(encoder, data, CHUNK, 2*CHUNK)
+     #data = dataString.encode('utf-8')
+     #print(type(data))
      encrypted = box.encrypt(data,nonce)#was data,nonce ##added for encrypt boiii
      #print(len(encrypted))
      #print(encrypted)
      if len(encrypted)!=1448:
          s.sendall(encrypted)#was data
 except Exception:
-    print("problem occured",sys.exc_info()[0])
-    
- 
+    print("problem occured",sys.exc_info())
+
+
 
 print("*done recording")
 
