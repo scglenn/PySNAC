@@ -200,8 +200,8 @@ while(True):
     #silence = chr(0)*Listen_CHUNK
 
     #network
-    Listener_HOST = fatmanIP#littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
-    Listener_PORT = 50008#50007#23555#50007              # The same port as used by the server
+    Listener_HOST = littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
+    Listener_PORT = 50007#23555#50007              # The same port as used by the server
     #global variable to see whether call was made or received
     waitingForCall = True
     #global variable to see if call has finished

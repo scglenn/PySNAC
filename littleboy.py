@@ -96,7 +96,7 @@ def listen():
                     frames_per_buffer=Listen_CHUNK)
 
 
-    PORT = 50008#23555#50007 changed to 50007 from 50008             # Arbitrary non-privileged port
+    PORT = 50007#23555#50007 changed to 50007 from 50008             # Arbitrary non-privileged port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
