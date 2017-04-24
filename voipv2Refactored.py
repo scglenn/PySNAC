@@ -32,8 +32,10 @@ def write_to_stream():
         #item = jitter_buf.get()
         #listener_stream.write(item)
         item = jitter_buf.get()
-        if (not item is None) and (jitter_buf.qsize() <= 5):
-            listener_stream.write(item)
+        data = talk_secret_box.decrypt(item)
+        data = oc.decode(data)
+        if (not data is None) and (jitter_buf.qsize() <= 5):
+            listener_stream.write(data)
             time.sleep(.005)  #trying to slow down this thread
         #try:
         #    item = jitter_buf.get_nowait()
@@ -142,13 +144,11 @@ def listen():
 
     while data != '':
         try:
-            data = talk_secret_box.decrypt(data)
             #print("decrypting")
             #data = lz4.block.decompress(data)#decompress
             #print("decompressing")
             #data= gzip.decompress(data)
             #print("decrpyt data len: " + str(len(data)))
-            data = oc.decode(data)
             jitter_buf.put(data)
             #print(jitter_buf.qsize())
             #stream.write(data)

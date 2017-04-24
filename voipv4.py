@@ -5,6 +5,7 @@ import wave
 import sys
 import time
 import queue
+import json
 #import lz4 # compression library
 #import gzip #compression library
 import Adafruit_CharLCD as LCD #LCD library
@@ -12,47 +13,28 @@ from LCD_Control import LCD_Control #LCD library
 
 import nacl.secret
 import nacl.utils
+from nacl.public import PrivateKey, PublicKey,Box
+from nacl.encoding import HexEncoder
+import jsonpickle
+secretNotKnown = True
 
 import subprocess
 from queue import *
 from opus import OpusCodec
-#from requests import get
-
-#import urllib
-#external_ip = urllib.request.urlopen('http://ident.me').read().decode('utf8')
-#print(external_ip)
-#intf_ip = external_ip
-#intf_ip = get('https://api.ipify.org').text
-
 
 def write_to_stream():
     global listener_stream
     global callInProgress
     while(callInProgress):
-        #item = jitter_buf.get()
-        #listener_stream.write(item)
         item = jitter_buf.get()
         if (not item is None) and (jitter_buf.qsize() <= 5):
             listener_stream.write(item)
             time.sleep(.005)  #trying to slow down this thread
-        #try:
-        #    item = jitter_buf.get_nowait()
-            #listener_stream.write(item)   
-        #except queue.Empty:
-        #    continue
-            #listener_stream.write(silence)
-        #listener_stream.write(item)
-        #try:
-        #    item = jitter_buf.get_nowait()
-        #    listener_stream.write(item)
-        #except Exception:
-        #    pass
-
-
 
 # client thread
 def talk():
-    
+    global shared_secret
+    global secretNotKnown
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.connect((Listener_HOST, Listener_PORT))
@@ -65,23 +47,28 @@ def talk():
                     frames_per_buffer=Talk_CHUNK)
 
     print("*recording")
-    
+    global skbob
+    pkalice = jsonpickle.decode(firebase.get('/fatman/pk',None))
+    pkalice = PublicKey(pkalice,encoder=HexEncoder)
+    bob_box = Box(skbob, pkalice)
+    ####PUBLIC KEY AGREEMENT
+    nonce = nacl.utils.random(Box.NONCE_SIZE)
+    data  = stream.read(Talk_CHUNK)
+    compressed_data = oc.encode(data)
+    encrypted = bob_box.encrypt(compressed_data, nonce)
+    s.send(encrypted)
+    ####PUBLIC KEY AGREEMENT
+    while secretNotKnown:
+        time.sleep(.01)
+    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    listen_secret_box = nacl.secret.SecretBox(shared_secret)
     try:
         for i in range(0, int(RATE/Talk_CHUNK*RECORD_SECONDS)):
             data  = stream.read(Talk_CHUNK)
-            #if len(data) == 960:
-            #    encrypted = silence
-            #else:
             compressed_data = oc.encode(data)
-            #print("raw data len",len(data))
-            #print("compressed data len",len(compressed_data))
-            #compressed_data = gzip.compress(data)#data#lz4.block.compress(data)#compressed
-            encrypted = listen_secret_box.encrypt(compressed_data,nonce)#was data,nonce ##added for encrypt boiii
-            #print("encrypted len",len(encrypted))
-            #was prev !=1448 
-            bytes_sent = s.send(encrypted)#was data, sendall
-            time.sleep(.01)  #trying to slow down this thread
-            #print(bytes_sent)
+            encrypted = listen_secret_box.encrypt(compressed_data,nonce)    
+            bytes_sent = s.send(encrypted)
+            time.sleep(.01)  
     except Exception:
         print("problem occured",sys.exc_info()[0])
         
@@ -100,7 +87,9 @@ def talk():
    
 # server thread   
 def listen():
+    global shared_secret
     global listener_stream
+    global secretNotKnown
     p = pyaudio.PyAudio()
     listener_stream = p.open(format=p.get_format_from_width(WIDTH),
                     channels=CHANNELS,
@@ -133,29 +122,32 @@ def listen():
     print ('Connected by', addr)
     time.sleep(2)
     data = conn.recv(Listen_CHUNK)# #1024
-    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    #might need this ? nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
     i=1
     print("first data received")
     print(len(data))
 
     writer.start()
+    #https://github.com/pyca/pynacl/blob/51acad0e34e125378d166d6bb9662408056702e0/tests/test_public.py
+    #alice_box = Box(skalice, pkbob)
+    global skbob
+    pkalice = jsonpickle.decode(firebase.get('/fatman/pk',None))
+    pkalice = PublicKey(pkalice,encoder=HexEncoder)
+    bob_box = Box(skbob, pkalice)
+    
 
+    data = bob_box.decrypt(data)
+    shared_secret = bob_box.shared_key()
+    talk_secret_box = nacl.secret.SecretBox(shared_secret)
+    secretNotKnown = False
+    data = conn.recv(Listen_CHUNK)
     while data != '':
         try:
             data = talk_secret_box.decrypt(data)
-            #print("decrypting")
-            #data = lz4.block.decompress(data)#decompress
-            #print("decompressing")
-            #data= gzip.decompress(data)
-            #print("decrpyt data len: " + str(len(data)))
             data = oc.decode(data)
             jitter_buf.put(data)
-            #print(jitter_buf.qsize())
-            #stream.write(data)
             data = conn.recv(Listen_CHUNK)# #1024
             i=i+1
-            #print(len(data))
-           
         except Exception:
             print("no connection",sys.exc_info())
             break
@@ -188,9 +180,14 @@ while(True):
     #encryption
     encryption_key = (12345).to_bytes(32,byteorder='big')
     length = 32
-    listen_secret_box = nacl.secret.SecretBox(encryption_key)
-    talk_secret_box = nacl.secret.SecretBox(encryption_key)
-    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    shared_secret = encryption_key
+    #some public key stuff
+    skbob = PrivateKey.generate()
+    pkbob = skbob.public_key
+    pkalice = HexEncoder.encode(bytes(pkbob))
+    frozen = jsonpickle.encode(pkalice)
+    firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/pk',data = frozen)
+
 
     #audio setup
     #Talk_CHUNK = 1024 

@@ -4,7 +4,6 @@ import pyaudio
 import wave
 import sys
 import time
-import queue
 #import lz4 # compression library
 #import gzip #compression library
 import Adafruit_CharLCD as LCD #LCD library
@@ -15,9 +14,12 @@ import nacl.utils
 
 import subprocess
 from queue import *
+import queue
 from opus import OpusCodec
 #from requests import get
-
+#import psutil, os
+#p = psutil.Process(os.getpid())
+#p.nice(9)
 #import urllib
 #external_ip = urllib.request.urlopen('http://ident.me').read().decode('utf8')
 #print(external_ip)
@@ -29,24 +31,20 @@ def write_to_stream():
     global listener_stream
     global callInProgress
     while(callInProgress):
-        #item = jitter_buf.get()
-        #listener_stream.write(item)
         item = jitter_buf.get()
+        data = talk_secret_box.decrypt(item)
+        data = oc.decode(data)
         if (not item is None) and (jitter_buf.qsize() <= 5):
-            listener_stream.write(item)
-            time.sleep(.005)  #trying to slow down this thread
-        #try:
-        #    item = jitter_buf.get_nowait()
-            #listener_stream.write(item)   
+            listener_stream.write(item)   
+            time.sleep(.005)  #trying to slow down this thread to reduce underrruns        
+##            item = jitter_buf.get_nowait()
+##            #listener_stream.write(item)   
         #except queue.Empty:
-        #    continue
-            #listener_stream.write(silence)
-        #listener_stream.write(item)
-        #try:
-        #    item = jitter_buf.get_nowait()
-        #    listener_stream.write(item)
-        #except Exception:
-        #    pass
+            #continue
+##            #listener_stream.write(silence)
+##        listener_stream.write(item)
+        
+          
 
 
 
@@ -78,12 +76,13 @@ def talk():
             #compressed_data = gzip.compress(data)#data#lz4.block.compress(data)#compressed
             encrypted = listen_secret_box.encrypt(compressed_data,nonce)#was data,nonce ##added for encrypt boiii
             #print("encrypted len",len(encrypted))
-            #was prev !=1448 
+            #was prev !=1448
+            #time.sleep(.020)
             bytes_sent = s.send(encrypted)#was data, sendall
-            time.sleep(.01)  #trying to slow down this thread
+            time.sleep(.01)
             #print(bytes_sent)
     except Exception:
-        print("problem occured",sys.exc_info()[0])
+        print("problem occured",sys.exc_info())
         
      
 
@@ -142,22 +141,21 @@ def listen():
 
     while data != '':
         try:
-            data = talk_secret_box.decrypt(data)
+
             #print("decrypting")
             #data = lz4.block.decompress(data)#decompress
             #print("decompressing")
             #data= gzip.decompress(data)
             #print("decrpyt data len: " + str(len(data)))
-            data = oc.decode(data)
             jitter_buf.put(data)
-            #print(jitter_buf.qsize())
+            print(jitter_buf.qsize())
             #stream.write(data)
             data = conn.recv(Listen_CHUNK)# #1024
             i=i+1
             #print(len(data))
-           
+            #time.sleep(.01)
         except Exception:
-            print("no connection",sys.exc_info())
+            print("ERROR occured",sys.exc_info())
             break
             
     listener_stream.stop_stream()
@@ -202,19 +200,19 @@ while(True):
     #WIDTH = 2
 
     #opus constants
-    Talk_CHUNK = 960#1920#2880#4800#3840#4800#960#2880
-    Listen_CHUNK = 168#424 # len of encrypted packet at 48000 is 168, 24000 is 176
+    Talk_CHUNK = 960#2880#960#1920#2880 #960#2
+    Listen_CHUNK = 168#296#168#424#168 # len of encrypted packet at 48000 is 168, 24000 is 176
     CHANNELS = 1
-    RATE = 48000#24000#48000 #24000 is also ok, but need to change opus.py if changed
+    RATE = 48000 #24000 is also ok, but need to change opus.py if changed
     WIDTH = 2
 
     oc = OpusCodec()    #ALSA 7843 underrun causing static?
 
-    #silence = chr(0)*Listen_CHUNK
+    silence = chr(0)*Talk_CHUNK*2
 
     #network
-    Listener_HOST = fatmanIP#littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
-    Listener_PORT = 50008#50007#23555#50007              # The same port as used by the server
+    Listener_HOST = littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
+    Listener_PORT = 50007#23555#50007              # The same port as used by the server
     #global variable to see whether call was made or received
     waitingForCall = True
     #global variable to see if call has finished
@@ -223,7 +221,7 @@ while(True):
     control = LCD_Control(LCD)
 
     listener_stream = 0
-    jitter_buf = Queue()
+    jitter_buf = queue.Queue()
 
     writer = threading.Thread(target=write_to_stream)
 
