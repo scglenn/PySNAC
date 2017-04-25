@@ -102,7 +102,7 @@ def listen():
     global secretNotKnown
     global nonce
     global nonce2
-
+    
     p = pyaudio.PyAudio()
     listener_stream = p.open(format=p.get_format_from_width(WIDTH),
                     channels=CHANNELS,
@@ -154,7 +154,8 @@ def listen():
     print("listen:",shared_secret)
     secretNotKnown = False
     data = conn.recv(Listen_CHUNK)
-    while data != '':
+    global callInProgress
+    while data != '' and callInProgress:
         try:
             data = talk_secret_box.decrypt(data)
             data = oc.decode(data)
@@ -174,80 +175,87 @@ def listen():
     listener_stream.close()
     p.terminate()
     conn.close()
-    global callInProgress
-    callInProgress = False
     
+    #callInProgress = False
+
 def call():
     myInput = control.getUserInput()
     global waitingForCall
+    global callInProgress
     if waitingForCall:
         waitingForCall  = False
-        talk()
-
-#while(True):
+        #talk()
+        talker = threading.Thread(target=talk)
+        talker.start()
+        myInput = control.getUserInput()
+        callInProgress=False
+    else
+        callInProgress=False
     
-intf = 'wlan0'
-intf_ip = subprocess.getoutput("ip address show dev " + intf).split()
-intf_ip = intf_ip[intf_ip.index('inet')+1].split('/')[0]
-
-from firebase import firebase
-firebase = firebase.FirebaseApplication('https://pysnac.firebaseio.com',None)
-
-fatmanIP = firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/ip',data = intf_ip)
-littleboyIP = firebase.get('/littleboy/ip',None)
-#encryption
-#encryption_key = (12345).to_bytes(32,byteorder='big')
-#length = 32
-#shared_secret = encryption_key
-#some public key stuff
-skbob = PrivateKey.generate()
-pkbob = skbob.public_key
-pkalice = HexEncoder.encode(bytes(pkbob))
-frozen = jsonpickle.encode(pkalice)
-firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/pk',data = frozen)
-#
-nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
-nonce2 = nacl.utils.random(Box.NONCE_SIZE)
-
-#audio setup
-#Talk_CHUNK = 1024 
-#Listen_CHUNK = 2088
-#CHANNELS = 1
-RECORD_SECONDS = 80000
-FORMAT = pyaudio.paInt16
-#RATE = 28000
-#WIDTH = 2
-
-#opus constants
-Talk_CHUNK = 960#2880#1920#2880#4800#3840#4800#960#2880
-Listen_CHUNK = 168#424#424 # len of encrypted packet at 48000 is 168, 24000 is 176
-CHANNELS = 1
-RATE = 48000#24000#48000 #24000 is also ok, but need to change opus.py if changed
-WIDTH = 2
-
-oc = OpusCodec()    #ALSA 7843 underrun causing static?
-
-#silence = chr(0)*Listen_CHUNK
-
-#network
-Listener_HOST = littleboyIP#fatmanIP#littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
-Listener_PORT = 50007#50007#23555#50007              # The same port as used by the server
-#global variable to see whether call was made or received
-waitingForCall = True
-#global variable to see if call has finished
-callInProgress = True
-#Initializing LCD control
-control = LCD_Control(LCD)
-
-listener_stream = 0
-jitter_buf = Queue()
-
-writer = threading.Thread(target=write_to_stream)
-
-listener =threading.Thread(target=listen)
-listener.start()
+while(True):
     
-    #while(callInProgress):
-    #    time.sleep(5)
+    intf = 'wlan0'
+    intf_ip = subprocess.getoutput("ip address show dev " + intf).split()
+    intf_ip = intf_ip[intf_ip.index('inet')+1].split('/')[0]
+
+    from firebase import firebase
+    firebase = firebase.FirebaseApplication('https://pysnac.firebaseio.com',None)
+
+    fatmanIP = firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/ip',data = intf_ip)
+    littleboyIP = firebase.get('/littleboy/ip',None)
+    #encryption
+    #encryption_key = (12345).to_bytes(32,byteorder='big')
+    #length = 32
+    #shared_secret = encryption_key
+    #some public key stuff
+    skbob = PrivateKey.generate()
+    pkbob = skbob.public_key
+    pkalice = HexEncoder.encode(bytes(pkbob))
+    frozen = jsonpickle.encode(pkalice)
+    firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/pk',data = frozen)
+    #
+    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    nonce2 = nacl.utils.random(Box.NONCE_SIZE)
+
+    #audio setup
+    #Talk_CHUNK = 1024 
+    #Listen_CHUNK = 2088
+    #CHANNELS = 1
+    RECORD_SECONDS = 80000
+    FORMAT = pyaudio.paInt16
+    #RATE = 28000
+    #WIDTH = 2
+
+    #opus constants
+    Talk_CHUNK = 960#2880#1920#2880#4800#3840#4800#960#2880
+    Listen_CHUNK = 168#424#424 # len of encrypted packet at 48000 is 168, 24000 is 176
+    CHANNELS = 1
+    RATE = 48000#24000#48000 #24000 is also ok, but need to change opus.py if changed
+    WIDTH = 2
+
+    oc = OpusCodec()    #ALSA 7843 underrun causing static?
+
+    #silence = chr(0)*Listen_CHUNK
+
+    #network
+    Listener_HOST = littleboyIP#fatmanIP#littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
+    Listener_PORT = 50007#50007#23555#50007              # The same port as used by the server
+    #global variable to see whether call was made or received
+    waitingForCall = True
+    #global variable to see if call has finished
+    callInProgress = True
+    #Initializing LCD control
+    control = LCD_Control(LCD)
+
+    listener_stream = 0
+    jitter_buf = Queue()
+
+    writer = threading.Thread(target=write_to_stream)
+
+    listener =threading.Thread(target=listen)
+    listener.start()
+    
+    while(callInProgress):
+        time.sleep(5)
 
 
