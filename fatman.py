@@ -33,6 +33,7 @@ def write_to_stream():
                 time.sleep(.005)  #trying to slow down this thread
         except Exception:
             print("write to stream error:",sys.exc_info())
+    print("write to stream stopped")
 
 # client thread
 def talk():
@@ -40,7 +41,7 @@ def talk():
     global secretNotKnown
     global nonce
     global nonce2
-
+    global callInProgress
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.connect((Listener_HOST, Listener_PORT))
@@ -71,7 +72,7 @@ def talk():
     print("talk:",shared_secret)
     forwardsecret=0
     try:
-        for i in range(0, int(RATE/Talk_CHUNK*RECORD_SECONDS)):
+        while(callInProgress):#for i in range(0, int(RATE/Talk_CHUNK*RECORD_SECONDS)):
             
             data  = stream.read(Talk_CHUNK)
             compressed_data = oc.encode(data)
@@ -80,18 +81,16 @@ def talk():
                 bytes_sent = s.send(encrypted)
             time.sleep(.01)  
     except Exception:
-        print("problem occured",sys.exc_info()[0])
+        print("problem occured",sys.exc_info())
         
      
-
-    print("*done recording")
 
     stream.stop_stream()
     stream.close()
     p.terminate()
     s.close()
-
-    print("*closed")
+    callInProgress=False
+    print("talk stopped")
     
 
    
@@ -102,7 +101,7 @@ def listen():
     global secretNotKnown
     global nonce
     global nonce2
-    
+    global callInProgress
     p = pyaudio.PyAudio()
     listener_stream = p.open(format=p.get_format_from_width(WIDTH),
                     channels=CHANNELS,
@@ -121,8 +120,8 @@ def listen():
     s.listen(1)
 
 
-    caller = threading.Thread(target=call)
-    caller.start()
+    #caller = threading.Thread(target=call)
+    #caller.start()
     
     conn, addr = s.accept()#here the thread waits for a connection
     global waitingForCall
@@ -155,7 +154,7 @@ def listen():
     secretNotKnown = False
     data = conn.recv(Listen_CHUNK)
     global callInProgress
-    while data != '' and callInProgress:
+    while data != '':
         try:
             data = talk_secret_box.decrypt(data)
             data = oc.decode(data)
@@ -168,6 +167,8 @@ def listen():
             data = conn.recv(Listen_CHUNK-len(data))# turrible derter destreryer
             time.sleep(.05)
             data = conn.recv(Listen_CHUNK)# #1024s
+            if(not callInProgress):
+                break
             continue
             #break
             
@@ -175,23 +176,26 @@ def listen():
     listener_stream.close()
     p.terminate()
     conn.close()
-    
-    #callInProgress = False
+    print("listen stopped")
+    callInProgress = False
 
 def call():
     myInput = control.getUserInput()
     global waitingForCall
     global callInProgress
+    controlEnd = LCD_Control(LCD)
     if waitingForCall:
         waitingForCall  = False
         #talk()
         talker = threading.Thread(target=talk)
         talker.start()
-        myInput = control.getUserInput()
+        myInput = controlEnd.getUserInput()
         callInProgress=False
-    else
+        print("call ended")
+    else:
+        print("call ended")
         callInProgress=False
-    
+    print("call stopped")
 while(True):
     
     intf = 'wlan0'
@@ -254,8 +258,9 @@ while(True):
 
     listener =threading.Thread(target=listen)
     listener.start()
-    
+    caller = threading.Thread(target=call)
+    caller.start()
     while(callInProgress):
         time.sleep(5)
-
+    print("program restarted")
 
