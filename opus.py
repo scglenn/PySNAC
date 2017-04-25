@@ -14,7 +14,7 @@ from opuslib.api import encoder as opus_encoder
 
 class OpusCodec():
     def __init__(self, fec=0):
-        self.chunk = 960#960#2880#960 # 20 ms at 48000
+        self.chunk = 960#2880#960#2880#960 # 20 ms at 48000
         self.channels = 1 # mono
         self.rate = 48000 # max rate (should this be reduced?)
         self.fec = fec # fec
