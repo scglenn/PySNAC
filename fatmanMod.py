@@ -192,6 +192,7 @@ def call():
         #talk()
         talker = threading.Thread(target=talk)
         talker.start()
+        time.sleep(5)
         myInput = control.getUserInput()
         callInProgress=False
         print("call ended")

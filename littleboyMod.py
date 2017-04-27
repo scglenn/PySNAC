@@ -192,16 +192,17 @@ def call():
         #talk()
         talker = threading.Thread(target=talk)
         talker.start()
+        time.sleep(5)
         myInput = control.getUserInput()
         callInProgress=False
         print("call ended")
     else:
-        print("call ended")
+        print("call ended2")
         callInProgress=False
     print("call stopped")
 
 oneCall = True
-while(oneCall):
+while(True):
     oneCall = False
     intf = 'wlan0'
     intf_ip = subprocess.getoutput("ip address show dev " + intf).split()

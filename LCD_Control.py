@@ -87,7 +87,7 @@ class LCD_Control:
         self.lcd.set_cursor(1,1)        #
         #self.lcd.message('When Finished')
         self.lcd.message('by !False')
-        time.sleep(3)
+        time.sleep(1)
         self.lcd.clear()
         self.lcd.message('Hit Select to')  #
         self.lcd.set_cursor(15,0)
@@ -97,7 +97,7 @@ class LCD_Control:
         self.lcd.set_cursor(15,0)           #
         #self.lcd.home()
         self.lcd.show_cursor(True)
-        while self.gotValue:
+        while True:
             '''#Loop for entering somthing in the LCD
             #grab next char
             if (self.lcd.is_pressed(self.LCD.UP) and self.position <15):
@@ -158,7 +158,7 @@ class LCD_Control:
 
 #(Public): displays call in progress
     def getUserInput(self):
-        while self.gotValue:
+        while True:
             if self.lcd.is_pressed(self.LCD.SELECT):
                 return True
 
@@ -166,7 +166,7 @@ class LCD_Control:
     def displayEndMessage(self):
         self.lcd.clear()
         self.lcd.message('Call ended.')
-        self.lcd.set_cursor(1,1)
-        self.lcd.message('Now restarting...')
+        self.lcd.set_cursor(0,1)
+        self.lcd.message('Please power off')
         self.callOver = True
         
