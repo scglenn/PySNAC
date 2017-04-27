@@ -4,6 +4,6 @@
 
 cd /
 cd home/pi/PySNAC
-sleep 5
+sleep 20
 sudo python3 fatman.py
 sudo poweroff
