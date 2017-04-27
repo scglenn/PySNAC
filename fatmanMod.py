@@ -268,7 +268,7 @@ while(oneCall):
     caller.start()
     
     while(callInProgress):
-        time.sleep(5)
+        time.sleep(1)
     control.displayEndMessage()
     print("program restarted")
 

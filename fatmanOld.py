@@ -131,8 +131,6 @@ def listen():
             talker = threading.Thread(target=talk)
             talker.start()
 
-    control.displayUserInputDuringCall()
-
     print ('Connected by', addr)
     time.sleep(2)
     data = conn.recv(Listen_CHUNK)# #1024
@@ -166,8 +164,6 @@ def listen():
         except Exception:
             print("Error warning:",sys.exc_info()[0])
             print("length of shit data",len(data))
-            if len(data) == 0:
-                callInProgress = False
             data = conn.recv(Listen_CHUNK-len(data))# turrible derter destreryer
             time.sleep(.05)
             data = conn.recv(Listen_CHUNK)# #1024s
@@ -184,26 +180,24 @@ def listen():
     callInProgress = False
 
 def call():
-    myInput = control.getUserInputInit()
+    myInput = control.getUserInput()
     global waitingForCall
     global callInProgress
+    controlEnd = LCD_Control(LCD)
     if waitingForCall:
         waitingForCall  = False
         #talk()
         talker = threading.Thread(target=talk)
         talker.start()
-        time.sleep(5)
-        myInput = control.getUserInput()
+        myInput = controlEnd.getUserInput()
         callInProgress=False
         print("call ended")
     else:
         print("call ended")
         callInProgress=False
     print("call stopped")
-
-oneCall = True
-while(oneCall):
-    oneCall = False
+while(True):
+    
     intf = 'wlan0'
     intf_ip = subprocess.getoutput("ip address show dev " + intf).split()
     intf_ip = intf_ip[intf_ip.index('inet')+1].split('/')[0]
@@ -266,9 +260,7 @@ while(oneCall):
     listener.start()
     caller = threading.Thread(target=call)
     caller.start()
-    
     while(callInProgress):
-        time.sleep(1)
-    control.displayEndMessage()
+        time.sleep(5)
     print("program restarted")
 

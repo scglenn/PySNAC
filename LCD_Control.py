@@ -159,7 +159,7 @@ class LCD_Control:
 #(Public): displays call in progress
     def getUserInput(self):
         while True:
-            if self.lcd.is_pressed(self.LCD.SELECT):
+            if self.lcd.is_pressed(self.LCD.SELECT) or self.callOver:
                 return True
 
 #(Public): brief display that call ended

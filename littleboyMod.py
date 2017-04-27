@@ -202,7 +202,7 @@ def call():
     print("call stopped")
 
 oneCall = True
-while(True):
+while(oneCall):
     oneCall = False
     intf = 'wlan0'
     intf_ip = subprocess.getoutput("ip address show dev " + intf).split()
@@ -266,7 +266,7 @@ while(True):
     caller.start()
     
     while(callInProgress):
-        time.sleep(5)
+        time.sleep(1)
     control.displayEndMessage()
     print("program restarted")
 

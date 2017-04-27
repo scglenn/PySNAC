@@ -130,6 +130,8 @@ def listen():
             talker = threading.Thread(target=talk)
             talker.start()
 
+    control.displayUserInputDuringCall()
+
     print ('Connected by', addr)
     time.sleep(2)
     data = conn.recv(Listen_CHUNK)# #1024
@@ -162,6 +164,8 @@ def listen():
         except Exception:
             print("Error warning:",sys.exc_info()[0])
             print("length of shit data",len(data))
+            if len(data) == 0:
+                callInProgress = False
             data = conn.recv(Listen_CHUNK-len(data))# throwing away this god awful derter
             #talk_secret_box = nacl.secret.SecretBox(shared_secret)
             
@@ -180,25 +184,26 @@ def listen():
     print("listen stopped")
     
 def call():
-    myInput = control.getUserInput()
+    myInput = control.getUserInputInit()
     global waitingForCall
     global callInProgress
-    controlEnd = LCD_Control(LCD)
     if waitingForCall:
         waitingForCall  = False
         #talk()
         talker = threading.Thread(target=talk)
         talker.start()
-        myInput = controlEnd.getUserInput()
+        time.sleep(5)
+        myInput = control.getUserInput()
         callInProgress=False
         print("call ended")
     else:
-        print("call ended")
+        print("call ended2")
         callInProgress=False
     print("call stopped")
 
-while(True):
-    
+oneCall = True
+while(oneCall):
+    oneCall = False
     intf = 'wlan0'
     intf_ip = subprocess.getoutput("ip address show dev " + intf).split()
     intf_ip = intf_ip[intf_ip.index('inet')+1].split('/')[0]
@@ -261,6 +266,7 @@ while(True):
     caller.start()
     
     while(callInProgress):
-        time.sleep(5)
+        time.sleep(1)
+    control.displayEndMessage()
     print("program restarted")
 
