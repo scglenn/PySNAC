@@ -30,6 +30,8 @@ class LCD_Control:
         self.currChar = 13
     #For keeping track of LCD pos
         self.position = 0
+    #For ending the call when the other user hangs up
+        self.callOver = False
         
 #(Private) returns converted user entered phrase as a string
     def getPhrase(self):
@@ -76,21 +78,27 @@ class LCD_Control:
         
 #(Public) Gets user input from LCD and buttons
 #Outputs : String input by the user
-    def getUserInput(self):
+    def getUserInputInit(self):
         self.lcd.home()
         self.lcd.clear()
-        self.lcd.message('Hit Select on \x01')
+        #self.lcd.message('Hit Select on \x01')
+        self.lcd.message('This is PySNAC')   #
         time.sleep(0.3)
-        self.lcd.set_cursor(1,1)
-        self.lcd.message('When Finished')
-        time.sleep(1)
+        self.lcd.set_cursor(1,1)        #
+        #self.lcd.message('When Finished')
+        self.lcd.message('by !False')
+        time.sleep(3)
         self.lcd.clear()
+        self.lcd.message('Hit Select to')  #
         self.lcd.set_cursor(15,0)
         self.lcd.message('\x01')
-        self.lcd.home()
+        self.lcd.set_cursor(1,1)        #
+        self.lcd.message('make a call')  #
+        self.lcd.set_cursor(15,0)           #
+        #self.lcd.home()
         self.lcd.show_cursor(True)
         while self.gotValue:
-            #Loop for entering somthing in the LCD
+            '''#Loop for entering somthing in the LCD
             #grab next char
             if (self.lcd.is_pressed(self.LCD.UP) and self.position <15):
                 self.currChar = self.scroll_up(self.currChar,len(self.characters)-1)
@@ -133,11 +141,32 @@ class LCD_Control:
                 if self.position == 15:
                     self.gotValue = False
                 time.sleep(0.2)
-                return self.getPhrase()
+                return self.getPhrase()'''
+            if self.lcd.is_pressed(self.LCD.SELECT) or self.callOver:
+                return True
 
+#(Public): displays for call in progress
+    def displayUserInputDuringCall(self):
+        self.lcd.clear()
+        self.lcd.message('Connected. Hit')
+        self.lcd.set_cursor(1,1)
+        self.lcd.message('Select to end')
+        self.lcd.set_cursor(15,1)
+        self.lcd.message('\x01')
+        self.lcd.set_cursor(15,1)           #
+        self.lcd.show_cursor(True)
 
+#(Public): displays call in progress
+    def getUserInput(self):
+        while self.gotValue:
+            if self.lcd.is_pressed(self.LCD.SELECT):
+                return True
 
-
-
+#(Public): brief display that call ended
+    def displayEndMessage(self):
+        self.lcd.clear()
+        self.lcd.message('Call ended.')
+        self.lcd.set_cursor(1,1)
+        self.lcd.message('Now restarting...')
+        self.callOver = True
         
-    
