@@ -22,7 +22,7 @@ edited /usr/share/alsa/alsa.conf to change 0 to 1 in
   AdaFruit 16x2 LCD 
 - Hardware: https://www.adafruit.com/product/1110
 - Library: https://github.com/adafruit/Adafruit_Python_CharLCD
-- Text entry was not necessary in the final implementation but for interested users, the file LCD_Control in the old subdirectory contains a class for users to enter a 15 character string using the directional buttons on the LCD shield [https://github.com/scglenn/PySNAC/old/blob/master/LCD_Control.py] 
+- Text entry was not necessary in the final implementation but for interested users, the file LCD_Control in the old subdirectory contains a class for users to enter a 15 character string using the directional buttons on the LCD shield [https://github.com/scglenn/PySNAC/blob/master/old/LCD_Control.py] 
 #### It is important to note that the I2C bus must be enabled on your Pi to use the LCD, to do so: 
 - Run sudo raspi-config 
 - Use the down arrow to select 9 Advanced Options.
