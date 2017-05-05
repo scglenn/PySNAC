@@ -9,9 +9,13 @@ These hardware components are needed:
 
   Two Raspberry Pi 3
 
-  Two USB soundcards
+### Two USB soundcards
+- Hardware: https://www.amazon.com/Plugable-Headphone-Microphone-Aluminum-Compatibility/dp/B00NMXY2MO
+### Two LCD screens
+  AdaFruit 16x2 LCD 
+- Hardware: https://www.adafruit.com/product/1110
+- Library: https://github.com/adafruit/Adafruit_Python_CharLCD
 
-  Two LCD screens
 
 Make sure to have Python3 and Pip3 installed.
 
@@ -40,9 +44,6 @@ Run:
 
 ### LipSodium
 [Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
-### AdaFruit 16x2 LCD 
-- Hardware: https://www.adafruit.com/product/1110
-- Library: https://github.com/adafruit/Adafruit_Python_CharLCD
 
 ## Usage
 
