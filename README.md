@@ -50,11 +50,11 @@ Run:
 
     Pulseaudio --start
 
-  - put the following in the file and save pcm.!default { type hw card 1 } ctl.!default { type hw card 1 }
+#### Underrun issues may occur, remove the ; before the following lines in etc/pulse/daemon.conf and change them to:
 
-  - edited /usr/share/alsa/alsa.conf to change 0 to 1 in
-        -defaults.ctl.card 1
-        -defaults.pcm.card 1    
+    default-fragments = 5
+    
+    default-fragment-size-msec = 2
 
 
 ### LipSodium
