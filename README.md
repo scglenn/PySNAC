@@ -33,7 +33,7 @@ edited /usr/share/alsa/alsa.conf to change 0 to 1 in
 - Select yes when it asks to reboot.
 
 ## Software Requirements and Setup
-Make sure to have Python3 and Pip3 installed.
+#### Make sure to have Python3 and Pip3 installed.
 
     sudo apt-get install python3-dev
 
@@ -41,6 +41,8 @@ Make sure to have Python3 and Pip3 installed.
 
     pip3 install pynacl
 
+### LibSodium
+[Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
 
 ### Pulse Audio
 Run:
@@ -57,9 +59,6 @@ Run:
     
     default-fragment-size-msec = 2
 
-
-### LipSodium
-[Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
 
 ### Json Pickle
 Json Pickle was used for stringifying objects sent to firebase (The public key for encryption) 
