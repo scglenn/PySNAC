@@ -5,12 +5,12 @@ Using this software will allow two users to talk to each other on a secured and 
 
 ## Getting Started
 
-To get started, the following hardware components are needed:<br/>
-  2 Raspberry Pi 3
+To get started, the following hardware components are needed:<br></br>
+  2 Raspberry Pi 3<br/>
   2 USB soundcards
     - RPi only natively supports audio out
   2 LCD screens
-    - 
+    -
 
 ## Usage
 
