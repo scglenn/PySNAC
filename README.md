@@ -59,10 +59,15 @@ Run:
 
 ### LipSodium
 [Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
+
+### Json Pickle
+Json Pickle was used for stringifying objects sent to firebase (The public key for encryption) 
+
+Library installation and usage can be found here: https://github.com/jsonpickle/jsonpickle
+
 ### FireBase Layout
  We utilized firebase to exchange the IPs of the two Pis 
 - Setup a database on firebase and exchange our credentials for your own modeling after the following to avoid code conflicts
-
 
 ![Alt text](https://github.com/scglenn/PySNAC/blob/master/18318341_1862662593974292_1004394085_o.png?raw=true)
 ## Usage
