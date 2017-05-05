@@ -53,3 +53,5 @@ on one of the Raspberry Pi's then run:
     python3 fatman.py
 
 on the other Raspberry Pi.
+
+Once the LCD display is up  select the check mark on using the buttons on the LCD to initiate the call.
