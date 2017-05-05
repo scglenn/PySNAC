@@ -4,14 +4,13 @@ PySNAC is a voice over ip (VOIP) application developed using Python3 on a Raspbe
 Using this software will allow two users to talk to each other on a secured and encrypted internet connection.
 
 ## Getting Started
-
-These hardware components are needed:
-
-  Two Raspberry Pi 3
-
-### Two USB soundcards
+Two devices are required each utilizing:
+- Raspberry Pi 3
+- USB Soundcard
+- Raspberry Pi Compatible LCD
+### USB soundcard
 - Hardware: https://www.amazon.com/Plugable-Headphone-Microphone-Aluminum-Compatibility/dp/B00NMXY2MO
-### Two LCD screens
+### LCD screen
   AdaFruit 16x2 LCD 
 - Hardware: https://www.adafruit.com/product/1110
 - Library: https://github.com/adafruit/Adafruit_Python_CharLCD
