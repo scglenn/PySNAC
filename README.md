@@ -42,7 +42,9 @@ edited /usr/share/alsa/alsa.conf to change 0 to 1 in
     pip3 install pynacl
 
 ### LibSodium
-[Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
+- Utilized for providing necessary encryption
+- PyNaCl is the python wrapper for LibSodium
+- [Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
 
 ### Pulse Audio
 Run:
