@@ -69,8 +69,8 @@ Library installation and usage can be found here: https://github.com/jsonpickle/
 
 ### FireBase Layout
  We utilized firebase to exchange the IPs of the two Pis 
- sudo pip install requests
- sudo pip install python-firebase
+    sudo pip install requests
+    sudo pip install python-firebase
 - Setup a database on firebase and exchange our credentials for your own modeling after the following to avoid code conflicts
 
 ![Alt text](https://github.com/scglenn/PySNAC/blob/master/18318341_1862662593974292_1004394085_o.png?raw=true)
