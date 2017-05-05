@@ -59,7 +59,12 @@ Run:
 
 ### LipSodium
 [Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
+### FireBase Layout
+ We utilized firebase to exchange the IPs of the two Pis 
+- Setup a database on firebase and exchange our credentials for your own modeling after the following to avoid code conflicts
 
+
+![Alt text](https://github.com/scglenn/PySNAC/blob/master/18318341_1862662593974292_1004394085_o.png?raw=true)
 ## Usage
 
 To launch the application run:
