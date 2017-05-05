@@ -11,6 +11,13 @@ Two devices are required each utilizing:
 - Raspberry Pi Compatible LCD
 ### USB soundcard
 - Hardware: https://www.amazon.com/Plugable-Headphone-Microphone-Aluminum-Compatibility/dp/B00NMXY2MO
+#### Must change default soundcard 
+edited /usr/share/alsa/alsa.conf to change 0 to 1 in
+
+    defaults.ctl.card 1
+    
+    defaults.pcm.card 1
+
 ### LCD screen
   AdaFruit 16x2 LCD 
 - Hardware: https://www.adafruit.com/product/1110
