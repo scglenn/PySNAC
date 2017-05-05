@@ -82,24 +82,66 @@ class LCD_Control:
         self.lcd.home()
         self.lcd.clear()
         #self.lcd.message('Hit Select on \x01')
-        self.lcd.message('This is PySNAC')
+        self.lcd.message('This is PySNAC')   #
         time.sleep(0.3)
-        self.lcd.set_cursor(1,1)
+        self.lcd.set_cursor(1,1)        #
         #self.lcd.message('When Finished')
         self.lcd.message('by !False')
         time.sleep(1)
         self.lcd.clear()
-        self.lcd.message('Hit Select to')
+        self.lcd.message('Hit Select to')  #
         self.lcd.set_cursor(15,0)
         self.lcd.message('\x01')
-        self.lcd.set_cursor(1,1)
-        self.lcd.message('make a call')
-        self.lcd.set_cursor(15,0)
+        self.lcd.set_cursor(1,1)        #
+        self.lcd.message('make a call')  #
+        self.lcd.set_cursor(15,0)           #
         #self.lcd.home()
         self.lcd.show_cursor(True)
         while True:
-            if self.lcd.is_pressed(self.LCD.SELECT) or self.callOver:
-                return True
+            #Loop for entering somthing in the LCD
+            #grab next char
+            if (self.lcd.is_pressed(self.LCD.UP) and self.position <15):
+                self.currChar = self.scroll_up(self.currChar,len(self.characters)-1)
+                self.lcd.message(self.characters[self.currChar])
+                self.lcd.set_cursor(self.position,0)
+                time.sleep(0.2)
+                
+            #grab previous char    
+            elif (self.lcd.is_pressed(self.LCD.DOWN) and self.position <15):
+                self.currChar = self.scroll_down(self.currChar,41)
+                self.lcd.message(self.characters[self.currChar])
+                self.lcd.set_cursor(self.position,0)
+                time.sleep(0.2)
+                
+            #Move cursor right and store prev character  
+            elif self.lcd.is_pressed(self.LCD.RIGHT):             #move right
+                self.position = self.scroll_up(self.position,15)             
+                self.lcd.set_cursor(self.position,0)
+                if((self.position<15) and (self.position-1 <= len(self.user_phrase))):
+                    if(self.position-1 == len(self.user_phrase)):
+                        self.user_phrase.append(self.currChar) 
+                    elif(self.position-1 < len(self.user_phrase) and self.position > 0):
+                        self.user_phrase[self.position-1] = self.currChar              #save last char
+                    self.currChar = self.getChar(self.position,self.user_phrase)
+                    self.lcd.message(self.characters[self.currChar])
+                    self.lcd.set_cursor(self.position,0)
+                time.sleep(0.2)
+                
+            #move cursor left
+            elif self.lcd.is_pressed(self.LCD.LEFT):
+                self.position = self.scroll_down(self.position,15)
+                self.lcd.set_cursor(self.position,0)
+                if((self.position<14) and (self.position <= len(self.user_phrase))):
+                    self.currChar = self.user_phrase[self.position]
+                    self.lcd.message(self.characters[self.currChar])
+                    self.lcd.set_cursor(self.position,0)
+                time.sleep(0.2)
+            #if cursor on checkmark, save user input string
+            elif self.lcd.is_pressed(self.LCD.SELECT):
+                if self.position == 15:
+                    self.gotValue = False
+                time.sleep(0.2)
+                return self.getPhrase()
 
 #(Public): displays for call in progress
     def displayUserInputDuringCall(self):
@@ -109,7 +151,7 @@ class LCD_Control:
         self.lcd.message('Select to end')
         self.lcd.set_cursor(15,1)
         self.lcd.message('\x01')
-        self.lcd.set_cursor(15,1)
+        self.lcd.set_cursor(15,1)           #
         self.lcd.show_cursor(True)
 
 #(Public): displays call in progress

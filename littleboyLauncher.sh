@@ -4,6 +4,7 @@
 
 cd /
 cd home/pi/PySNAC
-sleep 20
+sleep 10
 sudo python3 littleboy.py
-sudo poweroff
+sleep 30
+sudo shutdown now

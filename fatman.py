@@ -6,10 +6,9 @@ import sys
 import time
 import queue
 import json
-#import lz4 # compression library
-#import gzip #compression library
-import Adafruit_CharLCD as LCD #LCD library
-from LCD_Control import LCD_Control #LCD library
+import os
+import Adafruit_CharLCD as LCD
+from LCD_Control import LCD_Control
 
 import nacl.secret
 import nacl.utils
@@ -30,7 +29,7 @@ def write_to_stream():
             item = jitter_buf.get()
             if (not item is None) and (jitter_buf.qsize() <= 5):
                 listener_stream.write(item)
-                time.sleep(.005)  #trying to slow down this thread
+                time.sleep(.005)  #slows down this thread
         except Exception:
             print("write to stream error:",sys.exc_info())
     print("write to stream stopped")
@@ -43,7 +42,6 @@ def talk():
     global nonce2
     global callInProgress
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.connect((Listener_HOST, Listener_PORT))
 
     p = pyaudio.PyAudio()
@@ -67,12 +65,11 @@ def talk():
     ####PUBLIC KEY AGREEMENT
     while secretNotKnown:
         time.sleep(.01)
-    
     listen_secret_box = nacl.secret.SecretBox(shared_secret)
     print("talk:",shared_secret)
     forwardsecret=0
     try:
-        while(callInProgress):#for i in range(0, int(RATE/Talk_CHUNK*RECORD_SECONDS)):
+        while(callInProgress):
             
             data  = stream.read(Talk_CHUNK)
             compressed_data = oc.encode(data)
@@ -81,10 +78,8 @@ def talk():
                 bytes_sent = s.send(encrypted)
             time.sleep(.01)  
     except Exception:
-        print("problem occured",sys.exc_info())
+        print("talk problem occured",sys.exc_info())
         
-     
-
     stream.stop_stream()
     stream.close()
     p.terminate()
@@ -92,8 +87,6 @@ def talk():
     callInProgress=False
     print("talk stopped")
     
-
-   
 # server thread   
 def listen():
     global shared_secret
@@ -110,20 +103,15 @@ def listen():
                     frames_per_buffer=Listen_CHUNK)
 
 
-    PORT = 50008#23555#50007 changed to 50007 from 50008             # Arbitrary non-privileged port
+    PORT = 50008 # Arbitrary non-privileged port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
     s.bind(('', PORT))
     s.listen(1)
 
-
-    #caller = threading.Thread(target=call)
-    #caller.start()
-    
-    conn, addr = s.accept()#here the thread waits for a connection
+    conn, addr = s.accept() # waits for a connection
     global waitingForCall
     if waitingForCall :
         if(conn):
@@ -135,15 +123,12 @@ def listen():
 
     print ('Connected by', addr)
     time.sleep(2)
-    data = conn.recv(Listen_CHUNK)# #1024
-    #might need this ? nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    data = conn.recv(Listen_CHUNK)
     i=1
     print("first data received")
     print(len(data))
 
     writer.start()
-    #https://github.com/pyca/pynacl/blob/51acad0e34e125378d166d6bb9662408056702e0/tests/test_public.py
-    #alice_box = Box(skalice, pkbob)
     global skbob
     pkalice = jsonpickle.decode(firebase.get('/littleboy/pk',None))
     pkalice = PublicKey(pkalice,encoder=HexEncoder)
@@ -161,20 +146,19 @@ def listen():
             data = talk_secret_box.decrypt(data)
             data = oc.decode(data)
             jitter_buf.put(data)
-            data = conn.recv(Listen_CHUNK)# #1024
+            data = conn.recv(Listen_CHUNK)
             i=i+1
         except Exception:
             print("Error warning:",sys.exc_info()[0])
             print("length of shit data",len(data))
             if len(data) == 0:
                 callInProgress = False
-            data = conn.recv(Listen_CHUNK-len(data))# turrible derter destreryer
+            data = conn.recv(Listen_CHUNK-len(data))
             time.sleep(.05)
-            data = conn.recv(Listen_CHUNK)# #1024s
+            data = conn.recv(Listen_CHUNK)
             if(not callInProgress):
                 break
             continue
-            #break
             
     listener_stream.stop_stream()
     listener_stream.close()
@@ -189,7 +173,6 @@ def call():
     global callInProgress
     if waitingForCall:
         waitingForCall  = False
-        #talk()
         talker = threading.Thread(target=talk)
         talker.start()
         time.sleep(5)
@@ -202,6 +185,7 @@ def call():
     print("call stopped")
 
 oneCall = True
+os.system("sudo pulseaudio --start") # starts PulseAudio
 while(oneCall):
     oneCall = False
     intf = 'wlan0'
@@ -213,11 +197,7 @@ while(oneCall):
 
     fatmanIP = firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/ip',data = intf_ip)
     littleboyIP = firebase.get('/littleboy/ip',None)
-    #encryption
-    #encryption_key = (12345).to_bytes(32,byteorder='big')
-    #length = 32
-    #shared_secret = encryption_key
-    #some public key stuff
+
     skbob = PrivateKey.generate()
     pkbob = skbob.public_key
     pkalice = HexEncoder.encode(bytes(pkbob))
@@ -225,31 +205,29 @@ while(oneCall):
     firebase.put(url = 'https://pysnac.firebaseio.com', name = '/fatman/pk',data = frozen)
     #
     nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    urp = int.from_bytes(nonce, byteorder='little')
+    if(not (urp%2) == 0):
+        urp = urp +1
+        nonce = (urp).to_bytes(24, byteorder='little')
+        
     nonce2 = nacl.utils.random(Box.NONCE_SIZE)
 
-    #audio setup
-    #Talk_CHUNK = 1024 
-    #Listen_CHUNK = 2088
-    #CHANNELS = 1
+
     RECORD_SECONDS = 80000
     FORMAT = pyaudio.paInt16
-    #RATE = 28000
-    #WIDTH = 2
 
     #opus constants
-    Talk_CHUNK = 960#2880#1920#2880#4800#3840#4800#960#2880
-    Listen_CHUNK = 168#424#424 # len of encrypted packet at 48000 is 168, 24000 is 176
+    Talk_CHUNK = 960
+    Listen_CHUNK = 168
     CHANNELS = 1
-    RATE = 48000#24000#48000 #24000 is also ok, but need to change opus.py if changed
+    RATE = 48000
     WIDTH = 2
 
-    oc = OpusCodec()    #ALSA 7843 underrun causing static?
-
-    #silence = chr(0)*Listen_CHUNK
+    oc = OpusCodec()
 
     #network
-    Listener_HOST = littleboyIP#fatmanIP#littleboyIP #'172.23.39.163'#'172.23.48.9'#'127.0.0.1'#'192.168.1.19'    # The remote host
-    Listener_PORT = 50007#50007#23555#50007              # The same port as used by the server
+    Listener_HOST = littleboyIP # The remote host
+    Listener_PORT = 50007 # the same port as used by the server
     #global variable to see whether call was made or received
     waitingForCall = True
     #global variable to see if call has finished
@@ -268,7 +246,10 @@ while(oneCall):
     caller.start()
     
     while(callInProgress):
+        urp = int.from_bytes(nonce, byteorder='little')
+        urp = urp +2
+        nonce = (urp).to_bytes(24, byteorder='little')
         time.sleep(1)
     control.displayEndMessage()
-    print("program restarted")
+print("program ended")
 
