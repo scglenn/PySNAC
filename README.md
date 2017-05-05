@@ -41,8 +41,8 @@ Run:
 ### LipSodium
 [Installation Instructions link](https://https://download.libsodium.org/doc/installation/)
 ### AdaFruit 16x2 LCD 
-Hardware: https://www.adafruit.com/product/1110
-Library: https://github.com/adafruit/Adafruit_Python_CharLCD
+- Hardware: https://www.adafruit.com/product/1110
+- Library: https://github.com/adafruit/Adafruit_Python_CharLCD
 
 ## Usage
 
