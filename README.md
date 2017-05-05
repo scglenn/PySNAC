@@ -11,13 +11,14 @@ These hardware components are needed:
 
   Two USB soundcards
 
-    - RPi only natively supports audio out
-
   Two LCD screens
 
 Make sure to have Python3 and Pip3 installed.
 
     sudo apt-get install python3-dev
+
+    sudo apt-get install python3-pip
+
     pip3 install pynacl
 
 
@@ -28,13 +29,13 @@ Run:
 
     sudo nano /etc/asound.conf
 
-      - put the following in the file and save pcm.!default { type hw card 1 } ctl.!default { type hw card 1 }
-
-      - edited /usr/share/alsa/alsa.conf to change 0 to 1 in
-          -defaults.ctl.card 1
-          -defaults.pcm.card 1
-
     Pulseaudio --start
+
+  - put the following in the file and save pcm.!default { type hw card 1 } ctl.!default { type hw card 1 }
+
+  - edited /usr/share/alsa/alsa.conf to change 0 to 1 in
+        -defaults.ctl.card 1
+        -defaults.pcm.card 1    
 
 
 ### LipSodium
